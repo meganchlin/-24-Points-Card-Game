@@ -1,0 +1,8 @@
+node_modules
+signup-list-data.json
+*-grade.yml.old*
+.DS_Store
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

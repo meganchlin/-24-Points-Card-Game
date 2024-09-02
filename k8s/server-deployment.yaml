@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: server
+  name: server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      containers:
+      - image: 24points-server
+        name: server
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8191
+          name: server
+        env:
+        #- name: DISABLE_SECURITY
+        #  value: "foo-bar-baz"
+        - name: MONGO_URL
+          value: mongodb://db:27017
+        - name: REDIS_URL
+          value: redis://redis:6379

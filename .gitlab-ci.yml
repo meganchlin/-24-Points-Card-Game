@@ -1,0 +1,51 @@
+stages:
+  - build
+  - deploy
+  - test
+
+build:
+  stage: build
+  tags:
+    - RebyRunRun
+  rules:
+    - when: manual
+  script:
+    - docker build -t 24points-server ./server
+    - docker build -t 24points-ui ./ui
+    - echo "Build completed."
+
+deploy:
+  stage: deploy
+  tags:
+    - RebyRunRun
+  rules:
+    - when: manual
+  script:
+    - kubectl apply -f k8s/
+    - echo "Kubernetes deployment completed."
+
+e2e-test:
+  stage: test
+  tags:
+    - RebyRunRun
+  rules:
+    - when: manual
+  environment:
+    name: testing
+  variables:
+    DISABLE_SECURITY: "foo-bar-baz"
+  script:
+    - echo "Running E2E tests with DISABLE_SECURITY=$DISABLE_SECURITY"
+    - kubectl set env deployment/server DISABLE_SECURITY="$DISABLE_SECURITY"
+    - kubectl rollout restart deployment/server
+    - sleep 30  # Wait for the rollout to complete
+    - kubectl port-forward svc/server 31001:5001 &  # Correct port forwarding
+    - PORT_FORWARD_PID=$!
+    - sleep 10  # Give enough time for port forwarding to establish
+    - npm install @playwright/test 
+    # - npx playwright test --project=chromium
+    # - npx playwright test --project=firefox
+    - npx playwright test
+    - kill $PORT_FORWARD_PID
+    - kubectl set env deployment/server DISABLE_SECURITY-  # Clean up the env variable
+    - echo "E2E tests completed."
